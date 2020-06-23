@@ -1,0 +1,131 @@
+1.#include "stdafx.h"
+#include <iostream>
+#include <vector>
+#include <random>
+ 
+using namespace std;
+void Mix(vector<int>& numbers);
+int random(int min, int max);
+ 
+int main()
+{
+    for (int i = 0; i <= 10; i++) {
+        cout << random(0, 10) << endl;
+    }
+ 
+    system("pause");
+    return 0;
+}
+ 
+void Mix(vector<int>& numbers) {
+    int steps = numbers.size() * numbers.size();
+    int index1, index2;
+    //настройка генератора
+    random_device rd;
+    mt19937 mersenne(rd());
+    uniform_int_distribution<int> random_element(0, numbers.size() - 1);
+    //перемешиваем 
+    for (int i = 0; i < steps; i++) {
+        index1 = random_element(mersenne);
+        index2 = random_element(mersenne);
+        swap(numbers[index1], numbers[index2]);
+    }
+}
+ 
+int random(int min, int max) {
+    static vector<int> numbers;
+    if (numbers.size() == 0) {
+        for (int i = min; i <= max; i++)
+            numbers.push_back(i);
+        Mix(numbers);
+    }
+    int number = numbers[numbers.size() - 1];
+    numbers.pop_back();
+    return number;
+}
+2.#include <iostream>
+#include <sstream>
+#include <stdlib.h>
+using namespace std;
+const char * ar[] = {"а", "б", "в", "г", "д", "е", "ё", "ж", "з", "и", "й", "к", "л", "м", "н", "о", "п", "р", "с",
+        "т", "у", "ф", "х", "ц", "ч", "ш", "щ", "ъ", "ы", "ь", "э", "ю", "я","!","?",".","/","*",";",":","^"};
+int main(int argc, char* argv[]) {
+    int n;
+    string  s = "";
+    stringstream ss (argv[1]);
+    ss >> n;
+    for(int i=0; i < n; i++) s += ar[rand() % (sizeof ar/sizeof (char *))];
+    cout << s << endl;
+    return 0;
+}
+3.#include <iostream>
+#include <fstream>
+#include <cctype>
+#define is_delim(c) (isspace((c)) || ispunct((c)))
+ 
+//удаление числовых слов
+bool remove_wdec(const char* filename){
+    std::ifstream fin(filename, std::ifstream::binary);
+    if(! fin.is_open())
+        return false;
+ 
+    fin.seekg(0, fin.end);
+    int n = (int)fin.tellg();
+    if(n <= 0)
+        return false;
+ 
+    char* s = new (std::nothrow) char[n + 1];
+    if(s == NULL)
+        return false;
+ 
+    fin.seekg(0, fin.beg);
+    fin.read(s, n);
+    if(fin.gcount() != n){
+        delete[] s;
+        return false;
+    }
+    fin.close();
+ 
+    //удаление числовых слов
+    s[n]    = '\0';
+    char* a = s;
+    while(*a && !isdigit(*a))
+        ++a;
+ 
+    char* p;
+    bool  ok = false;
+    for(char* b = a; *a; *a = *b){
+        if((b == s) || is_delim(*(b - 1))){
+            p = b;
+            while(*p && isdigit(*p))
+                ++p;
+ 
+            if(((p - b) > 0) && (!*p || is_delim(*p))){
+                b  = p;
+                ok = true;
+                continue;
+            }
+        }
+        ++a;
+        ++b;
+    }
+ 
+    if(ok){//сохранение файла
+        std::ofstream fout(filename, std::ofstream::binary);
+        if(fout.is_open()){
+            fout.write(s, (int)(a - s));
+            ok = !fout.fail();
+            fout.flush();
+            fout.close();
+        } else
+            ok = false;
+    }
+    delete[] s;
+    return ok;
+}
+ 
+int main(void){
+    if(remove_wdec("file.txt"))
+        std::cout << "file modify." << std::endl;
+    return 0;
+}
